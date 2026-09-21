@@ -47,9 +47,9 @@ HabitTracker/
 │   ├── test_habit_manager.py
 │   ├── test_habit_storage.py
 │   └── test_seed_data.py
+├── README.md
 ├── pyproject.toml
-├── requirements.txt
-└── README.md
+└── requirements.txt
 ```
 
 ## Requirements
