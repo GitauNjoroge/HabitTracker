@@ -33,20 +33,22 @@ HabitTracker/
 ├── data/
 │   └── habits.json
 ├── src/
+│   ├── __init__.py
 │   ├── analytics.py
-│   ├── habit.py
 │   ├── habit_manager.py
 │   ├── habit_storage.py
+│   ├── habit.py
 │   ├── main.py
 │   └── seed_data.py
 ├── tests/
+│   ├── __init__.py
 │   ├── test_analytics.py
-│   ├── test_habit.py
 │   ├── test_habit_manager.py
 │   ├── test_habit_storage.py
+│   ├── test_habit.py
 │   └── test_seed_data.py
-├── README.md
 ├── pyproject.toml
+├── README.md
 └── requirements.txt
 ```
 
