@@ -35,20 +35,20 @@ HabitTracker/
 ├── src/
 │   ├── __init__.py
 │   ├── analytics.py
+│   ├── habit.py
 │   ├── habit_manager.py
 │   ├── habit_storage.py
-│   ├── habit.py
 │   ├── main.py
 │   └── seed_data.py
 ├── tests/
 │   ├── __init__.py
 │   ├── test_analytics.py
+│   ├── test_habit.py
 │   ├── test_habit_manager.py
 │   ├── test_habit_storage.py
-│   ├── test_habit.py
 │   └── test_seed_data.py
-├── pyproject.toml
 ├── README.md
+├── pyproject.toml
 └── requirements.txt
 ```
 
