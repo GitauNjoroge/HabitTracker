@@ -32,8 +32,6 @@ A Python command-line application for creating, completing, storing, and analysi
 HabitTracker/
 ├── data/
 │   └── habits.json
-├── docs/
-│   └── UML_COMPONENT_DIAGRAM.md
 ├── src/
 │   ├── analytics.py
 │   ├── habit.py
