@@ -43,7 +43,15 @@ PREDEFINED_HABITS = [
 
 
 def _daily_completions(start_date: datetime, completed_days: List[int]) -> List[datetime]:
-    """Create one deterministic completion timestamp for each selected day."""
+    """Create one deterministic completion timestamp for each selected day.
+
+    Args:
+        start_date: Midnight at the start of the seeded date range.
+        completed_days: Zero-based day offsets that should be completed.
+
+    Returns:
+        One 09:00 timestamp for each requested day.
+    """
     return [
         start_date + timedelta(days=day, hours=9)
         for day in completed_days
@@ -51,7 +59,15 @@ def _daily_completions(start_date: datetime, completed_days: List[int]) -> List[
 
 
 def _weekly_completions(start_date: datetime, completed_weeks: List[int]) -> List[datetime]:
-    """Create one deterministic Wednesday completion per selected week."""
+    """Create one deterministic Wednesday completion per selected week.
+
+    Args:
+        start_date: Midnight at the start of the seeded date range.
+        completed_weeks: Zero-based week offsets that should be completed.
+
+    Returns:
+        One 10:00 Wednesday timestamp for each requested week.
+    """
     return [
         start_date + timedelta(weeks=week, days=2, hours=10)
         for week in completed_weeks
@@ -64,6 +80,11 @@ def seed(manager: HabitManager, start_date: Optional[datetime] = None) -> None:
 
     Existing habits are not recreated and existing completion records are not
     duplicated.
+
+    Args:
+        manager: The manager that receives the predefined habits.
+        start_date: Optional beginning of the deterministic four-week fixture.
+            The time portion is normalised to midnight.
     """
     if start_date is None:
         start_date = (
@@ -73,6 +94,7 @@ def seed(manager: HabitManager, start_date: Optional[datetime] = None) -> None:
     else:
         start_date = start_date.replace(hour=0, minute=0, second=0, microsecond=0)
 
+    # Create missing habits first so the completion data can be applied by name.
     for definition in PREDEFINED_HABITS:
         try:
             manager.get_habit(definition["name"])
@@ -97,6 +119,7 @@ def seed(manager: HabitManager, start_date: Optional[datetime] = None) -> None:
         ],
     }
 
+    # Daily fixture data intentionally contains different streak patterns.
     for name, days in daily_data.items():
         habit = manager.get_habit(name)
         if habit.completion_records:
@@ -110,6 +133,7 @@ def seed(manager: HabitManager, start_date: Optional[datetime] = None) -> None:
         "Saving 20,000 KSH": [0, 2, 3],
     }
 
+    # Weekly fixtures use the same idempotent approach as daily fixtures.
     for name, weeks in weekly_data.items():
         habit = manager.get_habit(name)
         if habit.completion_records:

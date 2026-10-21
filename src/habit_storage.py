@@ -1,3 +1,5 @@
+"""JSON file persistence for HabitTracker data."""
+
 import json
 from pathlib import Path
 from typing import List, Union
@@ -6,15 +8,29 @@ from .habit import Habit
 
 
 class HabitStorage:
-    """Handles JSON persistence for Habit objects."""
+    """Handle JSON persistence for ``Habit`` objects."""
 
     def __init__(self, file_path: Union[str, Path] = "habits.json") -> None:
+        """Initialise storage for a JSON file.
+
+        Args:
+            file_path: A string or ``Path`` identifying the JSON data file.
+        """
         self.file_path = Path(file_path)
 
     def load_habits(self) -> List[Habit]:
-        """Load habits from JSON, or return an empty list if the file is absent."""
+        """Load habits from JSON, or return an empty list if absent.
+
+        Returns:
+            The deserialised habits in the file.
+
+        Raises:
+            ValueError: If the JSON is malformed, has the wrong top-level
+                type, or contains an invalid habit record.
+        """
         if not self.file_path.exists():
             return []
+        # Convert records only after confirming that the file contains a list.
         try:
             with self.file_path.open("r", encoding="utf-8") as file:
                 data = json.load(file)
@@ -32,7 +48,12 @@ class HabitStorage:
             ) from error
 
     def save_habits(self, habits: List[Habit]) -> None:
-        """Save habits to JSON."""
+        """Save habits to JSON.
+
+        Args:
+            habits: The habits to serialise and write.
+        """
+        # Create the parent directory so a new data location works immediately.
         self.file_path.parent.mkdir(parents=True, exist_ok=True)
         with self.file_path.open("w", encoding="utf-8") as file:
             json.dump([habit.to_dict() for habit in habits], file, indent=2)

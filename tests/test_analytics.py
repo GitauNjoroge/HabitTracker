@@ -1,3 +1,5 @@
+"""Tests for habit filtering and streak analytics."""
+
 from datetime import datetime
 
 from src.analytics import (
@@ -10,6 +12,7 @@ from src.habit import Habit
 
 
 def build_habits():
+    """Build one daily and one weekly habit for analytics tests."""
     daily = Habit("Exercise", "Exercise", "daily")
     weekly = Habit("Visit", "Visit family", "weekly")
     for day in (24, 25, 26):
@@ -20,20 +23,24 @@ def build_habits():
 
 
 def test_get_all_habits():
+    """Verify that analytics returns all supplied habits."""
     habits = build_habits()
     assert get_all_habits(habits) == habits
 
 
 def test_filter_periodicity():
+    """Verify that filtering selects habits by periodicity."""
     habits = build_habits()
     assert [h.name for h in get_habits_by_periodicity(habits, "daily")] == ["Exercise"]
 
 
 def test_longest_streak_all():
+    """Verify that the overall longest streak identifies the right habit."""
     name, streak = get_longest_streak_all(build_habits())
     assert name == "Exercise"
     assert streak == 3
 
 
 def test_longest_streak_for():
+    """Verify that a named habit's longest streak is returned."""
     assert get_longest_streak_for(build_habits(), "Visit") == 2

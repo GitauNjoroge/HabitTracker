@@ -1,3 +1,5 @@
+"""Tests for habit management, persistence, and CLI first-run behaviour."""
+
 from datetime import datetime
 
 from click.testing import CliRunner
@@ -8,6 +10,7 @@ from src.habit_storage import HabitStorage
 
 
 def test_create_and_delete(tmp_path):
+    """Verify that a manager can create and delete a persisted habit."""
     manager = HabitManager(HabitStorage(tmp_path / "habits.json"))
     manager.create_habit("Exercise", "Exercise", "daily")
     assert len(manager.list_habits()) == 1
@@ -16,6 +19,7 @@ def test_create_and_delete(tmp_path):
 
 
 def test_complete_persists(tmp_path):
+    """Verify that a completion remains available after reloading."""
     path = tmp_path / "habits.json"
     manager = HabitManager(HabitStorage(path))
     manager.create_habit("Exercise", "Exercise", "daily")
@@ -27,10 +31,12 @@ def test_complete_persists(tmp_path):
 
 
 def test_cli_does_not_reseed_after_all_habits_are_deleted(tmp_path, monkeypatch):
+    """Verify that deleting every habit does not trigger reseeding."""
     data_file = tmp_path / "data" / "habits.json"
     monkeypatch.setattr(main, "DATA_FILE", data_file)
     runner = CliRunner()
 
+    # The first command creates the deterministic first-run seed data.
     first_run = runner.invoke(main.cli, ["list-habits"])
     assert first_run.exit_code == 0
 
@@ -39,6 +45,7 @@ def test_cli_does_not_reseed_after_all_habits_are_deleted(tmp_path, monkeypatch)
     for habit in list(manager.list_habits()):
         manager.delete_habit(habit.name)
 
+    # The second command must respect the now-existing empty JSON file.
     empty_run = runner.invoke(main.cli, ["list-habits"])
     assert empty_run.exit_code == 0
     assert "No habits are currently tracked." in empty_run.output

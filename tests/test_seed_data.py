@@ -1,3 +1,5 @@
+"""Tests for deterministic first-run seed data."""
+
 from datetime import datetime
 
 from src.habit_manager import HabitManager
@@ -6,6 +8,7 @@ from src.seed_data import seed
 
 
 def test_seed_creates_the_five_documented_habits_with_four_weeks_of_data(tmp_path):
+    """Verify that seeding creates five habits and the expected records."""
     manager = HabitManager(HabitStorage(tmp_path / "habits.json"))
     start = datetime(2026, 8, 3, 14, 30)
     seed(manager, start)

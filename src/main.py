@@ -1,3 +1,5 @@
+"""Click command-line interface for creating and analysing habits."""
+
 from datetime import datetime
 from pathlib import Path
 
@@ -20,7 +22,15 @@ DATA_FILE = Path(__file__).resolve().parents[1] / "data" / "habits.json"
 @click.group()
 @click.pass_context
 def cli(context):
-    """HabitTracker command-line application."""
+    """Initialise the command group and load its shared HabitManager.
+
+    Args:
+        context: Click's command context, used to share the manager with
+            subcommands.
+
+    Raises:
+        click.ClickException: If the stored habit data cannot be loaded.
+    """
     if context.obj is None:
         manager = HabitManager(HabitStorage(DATA_FILE))
         data_file_exists = DATA_FILE.exists()
@@ -28,8 +38,8 @@ def cli(context):
             manager.load_habits()
         except ValueError as error:
             raise click.ClickException(str(error))
-        # Seed a first-run installation, but preserve an intentionally empty
-        # collection after a user deletes every habit.
+        # Seed only on first run; an existing empty file means the user chose
+        # to remove all habits and must not be repopulated automatically.
         if not data_file_exists:
             seed(manager)
         context.obj = manager
@@ -41,7 +51,17 @@ def cli(context):
 @click.argument("periodicity", type=click.Choice(["daily", "weekly"], case_sensitive=False))
 @click.pass_obj
 def create_habit(manager, name, task_description, periodicity):
-    """Create a new habit."""
+    """Create and display a new habit.
+
+    Args:
+        manager: The shared ``HabitManager`` provided by Click.
+        name: The habit name entered by the user.
+        task_description: The task description entered by the user.
+        periodicity: The selected daily or weekly schedule.
+
+    Raises:
+        click.ClickException: If the habit data is invalid or duplicated.
+    """
     try:
         habit = manager.create_habit(name, task_description, periodicity.lower())
         click.echo()
@@ -57,7 +77,15 @@ def create_habit(manager, name, task_description, periodicity):
 @click.argument("name")
 @click.pass_obj
 def delete_habit(manager, name):
-    """Delete an existing habit after confirmation."""
+    """Delete an existing habit after confirmation.
+
+    Args:
+        manager: The shared ``HabitManager`` provided by Click.
+        name: The name of the habit to delete.
+
+    Raises:
+        click.ClickException: If the habit cannot be found or deleted.
+    """
     try:
         manager.get_habit(name)
         if not click.confirm(f"Are you sure you want to delete '{name}'?"):
@@ -74,7 +102,16 @@ def delete_habit(manager, name):
 @click.option("--timestamp", default=None, help="Optional ISO-8601 timestamp for historical completion data.")
 @click.pass_obj
 def complete_habit(manager, name, timestamp):
-    """Mark a habit as complete."""
+    """Mark a habit as complete and display the recorded timestamp.
+
+    Args:
+        manager: The shared ``HabitManager`` provided by Click.
+        name: The name of the habit to complete.
+        timestamp: Optional ISO-8601 text for a historical completion.
+
+    Raises:
+        click.ClickException: If the timestamp or completion is invalid.
+    """
     try:
         parsed = datetime.fromisoformat(timestamp) if timestamp else None
         completed = manager.complete_habit(name, parsed)
@@ -90,7 +127,11 @@ def complete_habit(manager, name, timestamp):
 @cli.command("list-habits")
 @click.pass_obj
 def list_habits(manager):
-    """List all currently tracked habits in a formatted table."""
+    """List all currently tracked habits in a formatted table.
+
+    Args:
+        manager: The shared ``HabitManager`` provided by Click.
+    """
     habits = get_all_habits(manager.list_habits())
     if not habits:
         click.echo("No habits are currently tracked.")
@@ -111,6 +152,15 @@ def list_habits(manager):
     separator = "+" + "+".join("-" * (width + 2) for width in widths) + "+"
 
     def format_row(row):
+        """Format one table row using the calculated column widths.
+
+        Args:
+            row: The cell values to format.
+
+        Returns:
+            A padded table row suitable for terminal output.
+        """
+        # Pad each cell to the widest value in its column for alignment.
         return "| " + " | ".join(row[i].ljust(widths[i]) for i in range(len(row))) + " |"
 
     click.echo()
@@ -130,7 +180,15 @@ def list_habits(manager):
 @click.argument("name")
 @click.pass_obj
 def completion_history(manager, name):
-    """Display the completion history for a habit."""
+    """Display the completion history for a habit.
+
+    Args:
+        manager: The shared ``HabitManager`` provided by Click.
+        name: The name of the habit whose records should be displayed.
+
+    Raises:
+        click.ClickException: If the habit cannot be found.
+    """
     try:
         habit = manager.get_habit(name)
     except ValueError as error:
@@ -162,11 +220,22 @@ def completion_history(manager, name):
 @click.option("--longest-streak", is_flag=True, help="Show the longest streak across all habits.")
 @click.pass_obj
 def analyse(manager, periodicity, habit_name, longest_streak):
-    """Display habit analytics."""
+    """Display analytics for all habits or one selected filter.
+
+    Args:
+        manager: The shared ``HabitManager`` provided by Click.
+        periodicity: Optional daily or weekly filter.
+        habit_name: Optional name of one habit to inspect.
+        longest_streak: Whether to show the best streak across all habits.
+
+    Raises:
+        click.ClickException: If filters conflict or a habit is missing.
+    """
     habits = manager.list_habits()
     if not habits:
         click.echo("No habits are currently tracked.")
         return
+    # The command has three mutually exclusive views, so reject combinations.
     if sum(bool(value) for value in (periodicity, habit_name, longest_streak)) > 1:
         raise click.ClickException("Please use only one analysis filter at a time.")
 
@@ -234,6 +303,7 @@ def analyse(manager, periodicity, habit_name, longest_streak):
     for habit in habits:
         click.echo(f"  • {habit.name} [{habit.periodicity}]")
     click.echo()
+    # Build the two periodicity groups used by the unfiltered report.
     daily = get_habits_by_periodicity(habits, "daily")
     weekly = get_habits_by_periodicity(habits, "weekly")
     click.secho(f"Daily habits ({len(daily)}):", bold=True)

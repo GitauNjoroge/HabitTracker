@@ -1,3 +1,5 @@
+"""Tests for JSON loading and saving of habits."""
+
 from datetime import datetime
 
 import pytest
@@ -7,6 +9,7 @@ from src.habit_storage import HabitStorage
 
 
 def test_save_and_load(tmp_path):
+    """Verify that habit fields and completion dates round-trip through JSON."""
     storage = HabitStorage(tmp_path / "habits.json")
     habit = Habit(
         "Read",
@@ -22,6 +25,7 @@ def test_save_and_load(tmp_path):
 
 
 def test_invalid_json_has_a_clear_error(tmp_path):
+    """Verify that malformed JSON produces a clear ValueError."""
     path = tmp_path / "habits.json"
     path.write_text("{not valid json", encoding="utf-8")
 
